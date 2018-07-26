@@ -1,11 +1,16 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
-import About from './views/About.vue'
+
+import Login from './pages/Login.vue'
+
+// AuthService
+import AuthService from './services/auth'
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
+  mode: 'history',
   routes: [
     {
       path: '/',
@@ -13,9 +18,33 @@ export default new Router({
       component: Home
     },
     {
-      path: '/about',
-      name: 'about',
-      component: About
+      path: '/login',
+      name: 'login',
+      component: Login
     }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!AuthService.loggedIn()) {
+      next({
+        path: '/login'
+      })
+    }else {
+      next()
+    }
+  } else if(to.matched.some(record => record.meta.requiresGuest)) {
+    if (AuthService.loggedIn()) {
+      next({
+        path: '/'
+      })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+})
+
+export default router
